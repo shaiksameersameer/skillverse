@@ -22,6 +22,13 @@ TailwindCSS
 xhtml2pdf
 HTML5 + Jinja2 Templates
 Render.com (Hosting)
+Screenshots
+
+ 1. Upload Page
+[Upload Page](screenshots/upload.png)
+
+ 2. Match Result Page
+[Result Page](screenshots/result.png)
 
 How to Run Locally
 1.Clone the Repo
@@ -48,15 +55,21 @@ skillverse/
 ├── templates/
 │   ├── index.html
 │   └── report.html
-├── static/
-│   ├── style.css
 │
-├── uploads/          ← (auto created)
+├── static/
+│   └── style.css
+│
+├── screenshots/
+│   ├── upload.png
+│   └── result.png
+│
+├── uploads/ ← auto-created
 ├── app.py
 ├── requirements.txt
-├── README.md
-└── Procfile          ← (for Render deploy)
+├── Procfile
+└── README.md
 
 Credits
 Project built by [KAGITALA SAMEER] – Inspired by real-world HR tech needs.
 Drop a ⭐ if you find it helpful!
+
