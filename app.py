@@ -1,20 +1,20 @@
-from flask import Flask, render_template, request, send_file, session
+from flask import Flask, render_template, request, send_file
 import fitz  # PyMuPDF
 import os
-import pdfkit
 from io import BytesIO
+from xhtml2pdf import pisa
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Needed for session usage
-app.secret_key = "skillverse-secret"
+# Global variables for PDF report
+global_match = 0
+global_common = 0
+global_total = 0
+global_skills = []
+global_missing = []
 
-# wkhtmltopdf path setup (update if your path is different)
-PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
-
-# ----------------- Utility Functions -----------------
 def extract_text_from_pdf(path):
     doc = fitz.open(path)
     text = ""
@@ -33,23 +33,23 @@ def get_match_percent(resume_text, jd_text):
 def get_match_skills(resume_text, jd_text):
     resume_words = set(resume_text.split())
     jd_words = set(jd_text.split())
-    return list(resume_words.intersection(jd_words))
+    common = list(resume_words.intersection(jd_words))
+    return common
 
 def get_missing_skills(resume_text, jd_text):
     resume_words = set(resume_text.split())
     jd_words = set(jd_text.split())
-    return list(jd_words - resume_words)[:5]
+    missing = list(jd_words - resume_words)
+    return missing[:5]  # Only top 5 suggestions
 
-# ----------------- Main Routes -----------------
 @app.route("/", methods=["GET", "POST"])
 def index():
+    global global_match, global_common, global_total, global_skills, global_missing
+
     if request.method == "POST":
         resume = request.files["resume"]
         jd = request.files["jd"]
         if resume and jd:
-            if not os.path.exists("uploads"):
-                os.makedirs("uploads")
-
             resume_path = os.path.join(app.config["UPLOAD_FOLDER"], "resume.pdf")
             jd_path = os.path.join(app.config["UPLOAD_FOLDER"], "jd.pdf")
             resume.save(resume_path)
@@ -62,14 +62,12 @@ def index():
             common_skills = get_match_skills(resume_text, jd_text)
             missing_skills = get_missing_skills(resume_text, jd_text)
 
-            # Save data in session for report download
-            session["report_data"] = {
-                "match": match_percent,
-                "common": common_count,
-                "total": jd_total,
-                "skills": common_skills,
-                "missing": missing_skills
-            }
+            # Save global values for PDF
+            global_match = match_percent
+            global_common = common_count
+            global_total = jd_total
+            global_skills = common_skills
+            global_missing = missing_skills
 
             return render_template("index.html",
                                    match=match_percent,
@@ -77,25 +75,18 @@ def index():
                                    total=jd_total,
                                    skills=common_skills,
                                    missing=missing_skills)
-
     return render_template("index.html", match=None)
 
 @app.route("/download_report")
 def download_report():
-    data = session.get("report_data")
-    if not data:
-        return "No report data found. Please upload resume and JD again.", 400
+    html = render_template("report.html", match=global_match, common=global_common,
+                           total=global_total, skills=global_skills, missing=global_missing)
+    pdf = BytesIO()
+    pisa.CreatePDF(BytesIO(html.encode("utf-8")), dest=pdf)
+    pdf.seek(0)
+    return send_file(pdf, download_name="match_report.pdf", as_attachment=True)
 
-    html = render_template("report.html",
-                           match=data["match"],
-                           common=data["common"],
-                           total=data["total"],
-                           skills=data["skills"],
-                           missing=data["missing"])
-
-    pdf = pdfkit.from_string(html, False, configuration=PDFKIT_CONFIG)
-    return send_file(BytesIO(pdf), download_name="match_report.pdf", as_attachment=True)
-
-# ----------------- Run App -----------------
 if __name__ == "__main__":
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
     app.run(debug=True)

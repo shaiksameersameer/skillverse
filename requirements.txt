@@ -1,4 +1,4 @@
 flask
 pymupdf
 gunicorn
-pdfkit
+xhtml2pdf
