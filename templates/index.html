@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SkillVerse: Resume Matcher</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white p-6 min-h-screen">
+
+  <h1 class="text-4xl font-bold mb-8 text-center text-green-400">SkillVerse: Resume Matcher</h1>
+
+  <!-- Upload Form -->
+  <form method="POST" enctype="multipart/form-data" class="max-w-xl mx-auto mb-10 space-y-4 bg-gray-800 p-6 rounded-lg shadow-lg">
+    <input type="file" name="resume" required class="block w-full p-2 bg-gray-700 rounded">
+    <input type="file" name="jd" required class="block w-full p-2 bg-gray-700 rounded">
+    <button type="submit" class="w-full px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">Check Match</button>
+  </form>
+
+  <!-- Results Section -->
+  {% if match is not none %}
+  <div class="max-w-4xl mx-auto mt-8 bg-gray-800 p-6 rounded-lg shadow-lg">
+    <h2 class="text-2xl font-semibold text-center text-green-300 mb-4">Match Score: {{ match }}%</h2>
+
+    <!-- Chart -->
+    <div class="flex justify-center mb-6">
+      <div class="w-64 h-64">
+        <canvas id="matchChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Matched Skills -->
+    {% if skills %}
+    <div class="mt-6">
+      <h3 class="text-lg font-bold mb-2 text-green-400">Matched Keywords:</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+        {% for skill in skills %}
+          <span class="bg-green-700 px-2 py-1 rounded">{{ skill }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Chart.js Script -->
+  {% if match is not none %}
+  <script>
+    const data = {
+      labels: ["Matched Skills", "Unmatched Skills"],
+      datasets: [{
+        data: [{{ common }}, {{ total - common }}],
+        backgroundColor: ["#10B981", "#EF4444"],
+        borderColor: "#1F2937",
+        borderWidth: 2
+      }]
+    };
+    const config = {
+      type: "pie",
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: 'white',
+              font: {
+                size: 14
+              }
+            }
+          }
+        },
+        animation: {
+          animateRotate: true,
+          animateScale: true
+        }
+      }
+    };
+    new Chart(document.getElementById("matchChart"), config);
+  </script>
+  {% endif %}
+
+</body>
+</html>
