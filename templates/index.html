@@ -19,6 +19,7 @@
   <!-- Results Section -->
   {% if match is not none %}
   <div class="max-w-4xl mx-auto mt-8 bg-gray-800 p-6 rounded-lg shadow-lg">
+
     <h2 class="text-2xl font-semibold text-center text-green-300 mb-4">Match Score: {{ match }}%</h2>
 
     <!-- Chart -->
@@ -26,6 +27,13 @@
       <div class="w-64 h-64">
         <canvas id="matchChart"></canvas>
       </div>
+    </div>
+
+    <!-- Match Summary -->
+    <div class="bg-gray-700 p-4 rounded mb-6 text-sm">
+      <p>✅ <strong>Match:</strong> {{ match }}%</p>
+      <p>💡 <strong>Skills Matched:</strong> {{ common }} / {{ total }}</p>
+      <p>🚀 <strong>Improve Match By Adding:</strong> {{ missing }}</p>
     </div>
 
     <!-- Matched Skills -->
@@ -39,11 +47,15 @@
       </div>
     </div>
     {% endif %}
+
+    <!-- PDF Download Button -->
+    <div class="mt-6 text-center">
+      <a href="/download_report" class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded">📩 Download PDF Report</a>
+    </div>
+
   </div>
-  {% endif %}
 
   <!-- Chart.js Script -->
-  {% if match is not none %}
   <script>
     const data = {
       labels: ["Matched Skills", "Unmatched Skills"],
